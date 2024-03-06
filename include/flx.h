@@ -15,16 +15,21 @@
 typedef struct {
     int  score;    /* The score (string distance) */
     int* indices;  /* Indicies occurrence */
+    int  tail;
 } flx_result;
 
 /**
  * Return best score matching QUERY against STR.
+ * @param *result Result pointer to store to.
  * @param *str String to test.
  * @param *query Query use to score.
- * @return Return the score result.
  */
-void flx_score(const char* str, const char* query, flx_result* result);
+void flx_score(flx_result* result, const char* str, const char* query);
 
+/**
+ * Free result.
+ * @param *result The score result to free.
+ */
 void flx_free(flx_result* result);
 
 #endif /* __FLX_H__ */
