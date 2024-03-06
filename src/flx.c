@@ -53,8 +53,8 @@ static void clone_hm_int(hm_int* src, hm_int* dest) {
     dest = NULL;
 
     for (int i = 0; i < hmlen(src); ++i) {
-        //hmgeti();
-        //hmput(dest, src[i]);
+        int key = src[i].key;
+        hmput(dest, key, hmget(src, key));
     }
 }
 
@@ -226,7 +226,7 @@ static void get_heatmap_str(int* scores, const char* str, char group_separator) 
             group_alist[0][1] = group_word_count;
             group_word_count  = 0;
             {
-                int* new_arr;
+                int* new_arr = NULL;
                 arrput(new_arr, index1);
                 arrput(new_arr, group_word_count);
                 arrins(group_alist, 0, new_arr);
@@ -291,7 +291,7 @@ static void get_heatmap_str(int* scores, const char* str, char group_separator) 
 
         inc_vec(scores, num, group_start + 1, last_group_limit);
 
-        int* cddr_group;
+        int* cddr_group = NULL;
         clone_arr(group, cddr_group);
         arrdel(cddr_group, 0);
         arrdel(cddr_group, 0);
@@ -375,17 +375,16 @@ static void find_best_match(flx_result* imatch, hm_int* str_info, int* heatmap, 
     } else {
         int  uchar       = query[q_index];
         int* sorted_list = hmget(str_info, uchar);
-        int* indexes;
+        int* indexes     = NULL;
         bigger_sublist(indexes, sorted_list, greater_than);
-        int temp_score;
         int best_score = INT_MIN;
 
         if (q_index >= query_len - 1) {
             // At the tail end of the recursion, simply generate all possible
             // matches with their scores and return the list to parent.
             for (int i = 0; i < arrlen(indexes); ++i) {
-                int  index = indexes[i];
-                int* indices;
+                int  index   = indexes[i];
+                int* indices = NULL;
                 arrput(indices, index);
                 {
                     flx_result new_result;
@@ -399,11 +398,11 @@ static void find_best_match(flx_result* imatch, hm_int* str_info, int* heatmap, 
             for (int i = 0; i < arrlen(indexes); ++i) {
                 int index = indexes[i];
 
-                flx_result* elem_group;
-                hm_int*     new_dic;
+                flx_result* elem_group = NULL;
+                hm_int*     new_dic    = NULL;
                 clone_hm_int(new_dic, str_info);
 
-                int* new_vec;
+                int* new_vec = NULL;
                 clone_arr(new_vec, heatmap);
 
                 find_best_match(elem_group, new_dic, new_vec, index, query, query_len, q_index + 1,
@@ -430,15 +429,15 @@ void flx_score(flx_result* result, const char* str, const char* query) {
         return;
     }
 
-    hm_int* str_info;
+    hm_int* str_info = NULL;
     get_hash_for_string(str_info, str);
 
-    int* heatmap;
+    int* heatmap = NULL;
     get_heatmap_str(heatmap, str, NULL);
 
     bool        full_match_boost = (1 < query_len) && (query_len < 5);
-    hm_score*   match_cache;
-    flx_result* optimal_match;
+    hm_score*   match_cache      = NULL;
+    flx_result* optimal_match    = NULL;
     find_best_match(optimal_match, str_info, heatmap, NULL, query, query_len, 0, match_cache);
 
     if (arrlen(optimal_match) == 0) {
