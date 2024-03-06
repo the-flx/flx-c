@@ -21,10 +21,28 @@ void try_arr() {
     arrfree(arr);
 }
 
+typedef struct {
+    int key;
+    int value;
+} mypair;
+
+void try_hm() {
+    mypair* map = NULL;
+    int  k = 0;
+    hmput(map, k, 1);
+    printf("val: %d\n", hmget(map, k));
+}
+
 void modify_arr(int** arr) {
     *arr = NULL;
-    arrput(*arr, 1);
-    arrput(*arr, 2);
+    arrput(*arr, 11);
+    arrput(*arr, 22);
+
+    //*arr = (int*)malloc(2 * sizeof(int));
+    //(*arr)[0] = 10;
+    //(*arr)[1] = 20;
+
+    //printf("? %s\n", arrlen(*arr));
 }
 
 void test_flx() {
@@ -36,15 +54,18 @@ void test_flx() {
 }
 
 int main(int argc, char* argv[]) {
-    //test_flx();
+    test_flx();
 
-    int* arr = NULL;
+    {
+        //int* arr = NULL;
 
-    modify_arr(&arr);
+        //modify_arr(&arr);
 
-    printf("|%s\n", arrlen(arr));
+        //printf("? %d\n", arrlen(arr));
+        //arrfree(arr);
+    }
 
-    arrfree(arr);
+    //try_hm();
 
     return 0;
 }

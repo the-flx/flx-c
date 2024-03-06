@@ -40,6 +40,21 @@ typedef struct {
 } hm_score;
 
 /**
+ * Insert data to hm_int hash map.
+ */
+static void insert_dict(hm_int** dic, int key, int val) {
+    int* new_arr = hmget(*dic, key);
+
+    if (!new_arr) {
+        new_arr = NULL;
+    }
+
+    arrins(new_arr, 0, val);
+
+    hmput(*dic, key, new_arr);
+}
+
+/**
  * Clone the hm_int* hash map.
  */
 static void clone_hm_int(hm_int* src, hm_int* dest) {
@@ -134,11 +149,11 @@ static void inc_vec(int* vec, int inc, int beg, int end) {
  * Return hash-table for string where keys are characters.
  * Value is a sorted list of indexes for character occurrences.
  */
-static void get_hash_for_string(hm_int* result, const char* str) {
-    if (result) {
-        hmfree(result);
+static void get_hash_for_string(hm_int** result, const char* str) {
+    if (*result) {
+        hmfree(*result);
     }
-    result = NULL;
+    *result = NULL;
 
     const int str_len = strlen(str);
     int       index   = str_len - 1;
@@ -150,13 +165,13 @@ static void get_hash_for_string(hm_int* result, const char* str) {
         ch = str[index];
 
         if (capital(ch)) {
-            hmput(result, ch, index);
+            insert_dict(result, ch, index);
             down_ch = tolower(ch);
         } else {
             down_ch = ch;
         }
 
-        hmput(result, down_ch, index);
+        insert_dict(result, down_ch, index);
 
         --index;
     }
@@ -167,21 +182,21 @@ static void get_hash_for_string(hm_int* result, const char* str) {
  * 
  * See documentation for logic.
  */
-static void get_heatmap_str(int* scores, const char* str, char group_separator) {
-    if (!scores) {
+static void get_heatmap_str(int** scores, const char* str, char group_separator) {
+    if (!*scores) {
         return;
     }
 
     const int str_len        = strlen(str);
     const int str_last_index = str_len - 1;
 
-    if (scores) {
-        arrfree(scores);
+    if (*scores) {
+        arrfree(*scores);
     }
-    scores = NULL;
+    *scores = NULL;
 
     for (int i = 0; i < str_len; ++i) {
-        arrput(scores, default_score);
+        arrput(*scores, default_score);
     }
 
     int penalty_lead = '.';
@@ -194,7 +209,7 @@ static void get_heatmap_str(int* scores, const char* str, char group_separator) 
     arrput(group_alist, inner);
 
     // final char bonus
-    scores[str_last_index] += 1;
+    (*scores)[str_last_index] += 1;
 
     // Establish baseline mapping
     char last_ch;
@@ -219,7 +234,7 @@ static void get_heatmap_str(int* scores, const char* str, char group_separator) 
 
         // ++++ -45 penalize extension
         if (last_ch && last_ch == penalty_lead) {
-            scores[index1] += -45;
+            (*scores)[index1] += -45;
         }
 
         if (group_separator && group_separator == ch) {
@@ -247,7 +262,7 @@ static void get_heatmap_str(int* scores, const char* str, char group_separator) 
 
     // ++++ slash group-count penalty
     if (separator_count != 0) {
-        inc_vec(scores, group_count * -2, NULL, NULL);
+        inc_vec(*scores, group_count * -2, NULL, NULL);
     }
 
     int  index2           = separator_count;
@@ -289,7 +304,7 @@ static void get_heatmap_str(int* scores, const char* str, char group_separator) 
                 num = -5 + (index2 - 1);
         }
 
-        inc_vec(scores, num, group_start + 1, last_group_limit);
+        inc_vec(*scores, num, group_start + 1, last_group_limit);
 
         int* cddr_group = NULL;
         clone_arr(group, cddr_group);
@@ -303,13 +318,13 @@ static void get_heatmap_str(int* scores, const char* str, char group_separator) 
             int word = cddr_group[i];
 
             // ++++  beg word bonus AND
-            scores[word] += 85;
+            (*scores)[word] += 85;
 
             int index3 = word;
             int charI  = 0;
 
             while (index3 < last_word) {
-                scores[index3] += (-3 * word_index) - // ++++ word order penalty
+                (*scores)[index3] += (-3 * word_index) - // ++++ word order penalty
                                   charI;              // ++++ char order penalty
                 ++charI;
 
@@ -430,10 +445,10 @@ void flx_score(flx_result* result, const char* str, const char* query) {
     }
 
     hm_int* str_info = NULL;
-    get_hash_for_string(str_info, str);
+    get_hash_for_string(&str_info, str);
 
     int* heatmap = NULL;
-    get_heatmap_str(heatmap, str, NULL);
+    get_heatmap_str(&heatmap, str, NULL);
 
     bool        full_match_boost = (1 < query_len) && (query_len < 5);
     hm_score*   match_cache      = NULL;
@@ -456,10 +471,21 @@ void flx_score(flx_result* result, const char* str, const char* query) {
     result->score   = result1.score;
     result->tail    = result1.tail;
 
-    hmfree(str_info);
-    arrfree(heatmap);
-    hmfree(match_cache);
-    arrfree(optimal_match);
+    /* Free memories. */
+    {
+        arrfree(heatmap);
+        arrfree(optimal_match);
+
+        for (int i = 0; i < hmlen(str_info); ++i) {
+            arrfree(str_info[i].value);
+        }
+        hmfree(str_info);
+        
+        for (int i = 0; i < hmlen(match_cache); ++i) {
+            arrfree(match_cache[i].value);
+        }
+        hmfree(match_cache);
+    }
 }
 
 /**
