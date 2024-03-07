@@ -62,3 +62,6 @@ CTestCostData.txt
 LastTest.log
 LastTestsFailed.log
 temp
+
+# Clangd
+.cache/
