@@ -3,6 +3,8 @@
 # flx-c
 > Rewrite emacs-flx in C
 
+[![CI](https://github.com/jcs090218/flx-c/actions/workflows/test.yml/badge.svg)](https://github.com/jcs090218/flx-c/actions/workflows/test.yml)
+
 ## 🔧 Usage
 
 ```c
