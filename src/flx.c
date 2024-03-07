@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "../include/stb_ds.h"
 
@@ -21,7 +22,7 @@ static const char word_separators[] = {
         ' ', '-', '_', ':', '.', '/', '\\',
 };
 
-static const default_score = -35;
+static const int default_score = -35;
 
 /**
  * @struct Hashmap for value int.
@@ -179,7 +180,7 @@ static void get_hash_for_string(hm_int** result, const char* str) {
 
 /**
  * Generate the heatmap vector of string.
- * 
+ *
  * See documentation for logic.
  */
 static void get_heatmap_str(int** scores, const char* str, char group_separator) {
@@ -222,7 +223,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
         // before we find any words, all separaters are
         // considered words of length 1.  This is so "foo/__ab"
         // gets penalized compared to "foo/ab".
-        char effective_last_char = (group_word_count == 0) ? NULL : last_ch;
+        char effective_last_char = (group_word_count == 0) ? 0 : last_ch;
 
         if (boundary(effective_last_char, ch)) {
             arrins(group_alist[0], 2, index1);
@@ -266,7 +267,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
     }
 
     int  index2           = separator_count;
-    int  last_group_limit = NULL;
+    int  last_group_limit;
     bool basepath_found   = false;
 
     // score each group further
@@ -312,7 +313,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
         arrdel(cddr_group, 0);
 
         int word_index = words_len - 1;
-        int last_word  = (last_group_limit != NULL) ? last_group_limit : str_len;
+        int last_word  = (last_group_limit) ? last_group_limit : str_len;
 
         for (int i = 0; i < arrlen(cddr_group); ++i) {
             int word = cddr_group[i];
@@ -344,7 +345,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
 
 /**
  * Return sublist bigger than VAL from sorted SORTED-LIST.
- * 
+ *
  * If VAL is nil, return entire list.
  */
 static void bigger_sublist(int* result, int* sorted_list, int val) {
@@ -480,7 +481,7 @@ void flx_score(flx_result* result, const char* str, const char* query) {
             arrfree(str_info[i].value);
         }
         hmfree(str_info);
-        
+
         for (int i = 0; i < hmlen(match_cache); ++i) {
             arrfree(match_cache[i].value);
         }
