@@ -11,12 +11,13 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdlib.h>
 #include <limits.h>
 
 #include "../include/stb_ds.h"
 
 #include "../include/flx.h"
+
+#define min(X,Y) (((X) < (Y)) ? (X) : (Y))
 
 #define NIL (char)INT_MIN
 
