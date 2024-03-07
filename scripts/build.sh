@@ -18,4 +18,3 @@ echo
 echo ::Build macOS
 cmake -S . -B build/macos/
 
-
