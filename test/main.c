@@ -47,43 +47,26 @@ void modify_arr(int** arr) {
 
 flx_result* get_result() {
     flx_result result;
-    result.score = 10;
+    result.score   = 10;
     result.indices = NULL;
     arrput(result.indices, 10);
-    result.tail = 10; 
+    result.tail = 10;
     return &result;
 }
 
-void test_flx() {
+int main(int argc, char* argv[]) {
     flx_result* result = flx_score("buffer-file-name", "bfn");
 
     if (result == NULL)
-        return;
+        return -1;
 
     printf("Score: %d\n", result->score);
 
     for (int i = 0; i < arrlen(result->indices); ++i) {
         printf("idicies: %d %d\n", i, (*result).indices[i]);
     }
-        
+
     flx_free(result);
-}
-
-int main(int argc, char* argv[]) {
-    test_flx();
-
-    //printf("?%c?", (char)INT_MIN);
-
-    {
-        //int* arr = NULL;
-
-        //modify_arr(&arr);
-
-        //printf("? %d\n", arrlen(arr));
-        //arrfree(arr);
-    }
-
-    //try_hm();
 
     return 0;
 }
