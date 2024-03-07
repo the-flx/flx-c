@@ -1,6 +1,9 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
 # flx-c
 > Rewrite emacs-flx in C
 
+## 🔧 Usage
 
 ```c
 flx_result* result = flx_score("buffer-file-name", "bfn");
