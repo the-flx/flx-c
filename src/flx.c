@@ -91,6 +91,10 @@ static void clone_hm_int(const hm_int* src, hm_int** dest) {
  * Clone the int* array.
  */
 static void clone_arr_int(const int* src, int** dest) {
+    if (!src) {
+        return;
+    }
+
     if (*dest) {
         arrfree(*dest);
     }
