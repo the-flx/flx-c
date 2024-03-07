@@ -575,4 +575,5 @@ void flx_free(flx_result* result) {
         return;
     }
     arrfree(result->indices);
+    free(result);
 }

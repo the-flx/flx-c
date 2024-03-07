@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
     printf("Score: %d\n", result->score);
 
     for (int i = 0; i < arrlen(result->indices); ++i) {
-        printf("idicies: %d %d\n", i, (*result).indices[i]);
+        printf("(%d) idicies: %d\n", i, (*result).indices[i]);
     }
 
     flx_free(result);
