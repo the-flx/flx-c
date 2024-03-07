@@ -8,7 +8,6 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
@@ -18,11 +17,24 @@
 
 #include "../include/flx.h"
 
+#define NIL (char)INT_MIN
+
 static const char word_separators[] = {
         ' ', '-', '_', ':', '.', '/', '\\',
 };
 
 static const int default_score = -35;
+
+/**
+ * Create a new result.
+ */
+static flx_result new_result(int* indicies, int score, int tail) {
+    flx_result new_result;
+    new_result.indices = indicies;
+    new_result.score   = score;
+    new_result.tail    = tail;
+    return new_result;
+}
 
 /**
  * @struct Hashmap for value int.
@@ -58,37 +70,48 @@ static void insert_dict(hm_int** dic, int key, int val) {
 /**
  * Clone the hm_int* hash map.
  */
-static void clone_hm_int(hm_int* src, hm_int* dest) {
+static void clone_hm_int(const hm_int* src, hm_int** dest) {
     if (!src) {
         return;
     }
 
-    if (dest) {
-        hmfree(dest);
+    if (*dest) {
+        hmfree(*dest);
     }
-    dest = NULL;
+    *dest = NULL;
 
     for (int i = 0; i < hmlen(src); ++i) {
         int key = src[i].key;
-        hmput(dest, key, hmget(src, key));
+        int* val = src[i].value;
+        hmput(*dest, key, val);
     }
 }
 
 /**
  * Clone the int* array.
  */
-static void clone_arr(int* src, int* dest) {
-    if (!src) {
-        return;
+static void clone_arr_int(const int* src, int** dest) {
+    if (*dest) {
+        arrfree(*dest);
     }
-
-    if (dest) {
-        arrfree(dest);
-    }
-    dest = NULL;
+    *dest = NULL;
 
     for (int i = 0; i < arrlen(src); ++i) {
-        arrput(dest, src[i]);
+        arrput(*dest, src[i]);
+    }
+}
+
+/**
+ * Clone the flx_result* array.
+ */
+static void clone_arr_result(const flx_result* src, flx_result** dest) {
+    if (*dest) {
+        arrfree(*dest);
+    }
+    *dest = NULL;
+
+    for (int i = 0; i < arrlen(src); ++i) {
+        arrput(*dest, src[i]);
     }
 }
 
@@ -96,7 +119,7 @@ static void clone_arr(int* src, int* dest) {
  * Check if CHAR is a word character.
  */
 static bool word(char ch) {
-    if (!ch) {
+    if (ch == NIL) {
         return false;
     }
     return !strchr(word_separators, ch);
@@ -132,9 +155,9 @@ static bool boundary(char last_ch, char ch) {
  * Increment each element in VEC between BEG and END by INC.
  */
 static void inc_vec(int** vec, int inc, int beg, int end) {
-    inc = (inc) ? inc : 1;
-    beg = (beg) ? beg : 0;
-    end = (end) ? end : arrlen(*vec);
+    inc = (inc == NIL) ? 1 : inc;
+    beg = (beg == NIL) ? 0 : beg;
+    end = (end == NIL) ? arrlen(*vec) : end;
 
     while (beg < end) {
         (*vec)[beg] += inc;
@@ -205,7 +228,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
     (*scores)[str_last_index] += 1;
 
     // Establish baseline mapping
-    char last_ch;
+    char last_ch          = NIL;
     int  group_word_count = 0;
     int  index1           = 0;
 
@@ -230,7 +253,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
             (*scores)[index1] += -45;
         }
 
-        if (group_separator && group_separator == ch) {
+        if (group_separator != NIL && group_separator == ch) {
             group_alist[0][1] = group_word_count;
             group_word_count  = 0;
             {
@@ -255,12 +278,12 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
 
     // ++++ slash group-count penalty
     if (separator_count != 0) {
-        inc_vec(*scores, group_count * -2, 0, arrlen(*scores));
+        inc_vec(scores, group_count * -2, NIL, NIL);
     }
 
-    int  index2 = separator_count;
-    int  last_group_limit;
-    bool basepath_found = false;
+    int  index2           = separator_count;
+    int  last_group_limit = NIL;
+    bool basepath_found   = false;
 
     // score each group further
     for (int i = 0; i < arrlen(group_alist); ++i) {
@@ -293,16 +316,17 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
         else {
             if (index2 == 0) {
                 num = -3;
-            }
-            else {
+            } else {
                 num = -5 + (index2 - 1);
             }
         }
 
-        inc_vec(*scores, num, group_start + 1, last_group_limit);
+        int len = arrlen(*scores);
+
+        inc_vec(scores, num, group_start + 1, last_group_limit);
 
         int* cddr_group = NULL;
-        clone_arr(group, cddr_group);
+        clone_arr_int(group, &cddr_group);
         arrdel(cddr_group, 0);
         arrdel(cddr_group, 0);
 
@@ -322,7 +346,6 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
                 (*scores)[index3] += (-3 * word_index) - // ++++ word order penalty
                                      charI;              // ++++ char order penalty
                 ++charI;
-
                 ++index3;
             }
 
@@ -342,21 +365,22 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
  *
  * If VAL is nil, return entire list.
  */
-static void bigger_sublist(int* result, int* sorted_list, int val) {
-    if (!sorted_list)
+static void bigger_sublist(int** result, int** sorted_list, int val) {
+    if (*sorted_list == NULL) {
         return;
+    }
 
     if (val) {
-        for (int i = 0; i < arrlen(sorted_list); ++i) {
-            int sub = sorted_list[i];
+        for (int i = 0; i < arrlen(*sorted_list); ++i) {
+            int sub = (*sorted_list)[i];
             if (sub > val) {
-                arrput(result, sub);
+                arrput(*result, sub);
             }
         }
     } else {
-        for (int i = 0; i < arrlen(sorted_list); ++i) {
-            int sub = sorted_list[i];
-            arrput(result, sub);
+        for (int i = 0; i < arrlen(*sorted_list); ++i) {
+            int sub = (*sorted_list)[i];
+            arrput(*result, sub);
         }
     }
 }
@@ -365,28 +389,29 @@ static void bigger_sublist(int* result, int* sorted_list, int val) {
  * Recursively compute the best match for a string, passed as STR-INFO and
  * HEATMAP, according to QUERY.
  */
-static void find_best_match(flx_result* imatch, hm_int* str_info, int* heatmap, int greater_than,
-                            const char* query, int query_len, int q_index, hm_score* match_cache) {
-    int         greater_num = (greater_than) ? greater_than : 0;
+static void find_best_match(flx_result** imatch, hm_int** str_info, int** heatmap, int greater_than,
+                            const char* query, int query_len, int q_index, hm_score** match_cache) {
+    int         greater_num = (greater_than == NIL) ? 0 : greater_than;
     int         hash_key    = q_index + (greater_num * query_len);
-    flx_result* hash_value  = hmget(match_cache, hash_key);
+    flx_result* hash_value  = hmget(*match_cache, hash_key);
 
     // Process matchCache here
     if (hash_value != NULL) {
-        if (imatch) {
-            arrfree(imatch);
+        if (*imatch) {
+            arrfree(*imatch);
         }
-        imatch = NULL;
+        *imatch = NULL;
 
         for (int i = 0; i < hmlen(hash_value); ++i) {
             flx_result val = hash_value[i];
-            arrput(imatch, val);
+            arrput(*imatch, val);
         }
     } else {
         int  uchar       = query[q_index];
-        int* sorted_list = hmget(str_info, uchar);
+        int* sorted_list = hmget(*str_info, uchar);
         int* indexes     = NULL;
-        bigger_sublist(indexes, sorted_list, greater_than);
+        bigger_sublist(&indexes, &sorted_list, greater_than);
+        int temp_score;
         int best_score = INT_MIN;
 
         if (q_index >= query_len - 1) {
@@ -399,9 +424,9 @@ static void find_best_match(flx_result* imatch, hm_int* str_info, int* heatmap, 
                 {
                     flx_result new_result;
                     new_result.indices = indices;
-                    new_result.score   = heatmap[index];
+                    new_result.score   = (*heatmap)[index];
                     new_result.tail    = 0;
-                    arrput(imatch, new_result);
+                    arrput(*imatch, new_result);
                 }
             }
         } else {
@@ -409,19 +434,61 @@ static void find_best_match(flx_result* imatch, hm_int* str_info, int* heatmap, 
                 int index = indexes[i];
 
                 flx_result* elem_group = NULL;
+
                 hm_int*     new_dic    = NULL;
-                clone_hm_int(new_dic, str_info);
+                clone_hm_int(*str_info, &new_dic);
 
                 int* new_vec = NULL;
-                clone_arr(new_vec, heatmap);
+                clone_arr_int(*heatmap, &new_vec);
 
-                find_best_match(elem_group, new_dic, new_vec, index, query, query_len, q_index + 1,
-                                match_cache);
+                find_best_match(&elem_group, &new_dic, &new_vec, index, query, query_len,
+                                q_index + 1, match_cache);
+
+                for (int j = 0; j < arrlen(elem_group); ++j) {
+                    flx_result elem = elem_group[j];
+
+                    int caar = elem.indices[0];
+                    int cadr = elem.score;
+                    int cddr = elem.tail;
+
+                    if ((caar - 1) == index) {
+                        temp_score = cadr + (*heatmap)[index] +
+                                     (min(cddr, 3) * 15) + // boost contiguous matches
+                                     60;
+                    } else {
+                        temp_score = cadr + (*heatmap)[index];
+                    }
+
+                    // We only care about the optimal match, so only forward the match
+                    // with the best score to parent
+                    if (temp_score > best_score) {
+                        best_score = temp_score;
+
+                        arrfree(*imatch);
+                        *imatch = NULL;
+
+                        int* indices = NULL;
+                        clone_arr_int(elem.indices, &indices);
+
+                        arrins(indices, 0, index);
+                        int tail = 0;
+                        if ((caar - 1) == index) {
+                            tail = cddr + 1;
+                        }
+
+                        arrput(*imatch, new_result(indices, temp_score, tail));
+                    }
+                }
 
                 hmfree(new_dic);
                 arrfree(new_vec);
             }
         }
+
+        // Calls are cached to avoid exponential time complexity
+        flx_result* new_res = NULL;
+        clone_arr_result(*imatch, &new_res);
+        hmput(*match_cache, hash_key, new_res);
     }
 }
 
@@ -430,39 +497,44 @@ static void find_best_match(flx_result* imatch, hm_int* str_info, int* heatmap, 
  * @param *str String to test.
  * @param *query Query use to score.
  */
-flx_result flx_score(const char* str, const char* query) {
-    flx_result result;
+flx_result* flx_score(const char* str, const char* query) {
+    flx_result* result = malloc(1 * sizeof(flx_result));
 
     const int str_len   = strlen(str);
     const int query_len = strlen(query);
 
     if (str_len == 0 || query_len == 0) {
-        return result;
+        return NULL;
     }
 
     hm_int* str_info = NULL;
     get_hash_for_string(&str_info, str);
 
     int* heatmap = NULL;
-    get_heatmap_str(&heatmap, str, '\0');
-
-    //printf("%d", *heatmap);
+    get_heatmap_str(&heatmap, str, NIL);
 
     bool        full_match_boost = (1 < query_len) && (query_len < 5);
     hm_score*   match_cache      = NULL;
     flx_result* optimal_match    = NULL;
-    find_best_match(optimal_match, str_info, heatmap, 0, query, query_len, 0, match_cache);
+    find_best_match(&optimal_match, &str_info, &heatmap, NIL, query, query_len, 0, &match_cache);
 
     if (arrlen(optimal_match) == 0) {
-        return result;
+        return NULL;
     }
 
-    result = optimal_match[0];
+    flx_result result1 = optimal_match[0];
 
-    int caar = arrlen(result.indices);
+    int caar = arrlen(result1.indices);
 
     if (full_match_boost && caar == str_len) {
-        result.score += 10000;
+        result1.score += 10000;
+    }
+
+    /* Copy data */
+    {
+        result->indices = result1.indices;
+        result->score   = result1.score;
+        result->tail    = result1.tail;
     }
 
     /* Free memories. */
@@ -482,4 +554,19 @@ flx_result flx_score(const char* str, const char* query) {
     }
 
     return result;
+}
+
+/**
+ * Free result.
+ * @param *result The score result to free.
+ */
+void flx_free(flx_result* result) {
+    if (!result) {
+        return;
+    }
+
+    if (!result->indices) {
+        return;
+    }
+    arrfree(result->indices);
 }

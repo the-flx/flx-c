@@ -28,7 +28,7 @@ typedef struct {
 
 void try_hm() {
     mypair* map = NULL;
-    int  k = 0;
+    int     k   = 0;
     hmput(map, k, 1);
     printf("val: %d\n", hmget(map, k));
 }
@@ -45,15 +45,34 @@ void modify_arr(int** arr) {
     //printf("? %s\n", arrlen(*arr));
 }
 
+flx_result* get_result() {
+    flx_result result;
+    result.score = 10;
+    result.indices = NULL;
+    arrput(result.indices, 10);
+    result.tail = 10; 
+    return &result;
+}
+
 void test_flx() {
-    flx_result result = flx_score("buffer-file-name", "bfn");
-    printf("Score %d\n", result.score);
-    //printf("Indicies %d\n", result.indices[0]);
-    //flx_free(&result);
+    flx_result* result = flx_score("buffer-file-name", "bfn");
+
+    if (result == NULL)
+        return;
+
+    printf("Score: %d\n", result->score);
+
+    for (int i = 0; i < arrlen(result->indices); ++i) {
+        printf("idicies: %d %d\n", i, (*result).indices[i]);
+    }
+        
+    flx_free(result);
 }
 
 int main(int argc, char* argv[]) {
     test_flx();
+
+    //printf("?%c?", (char)INT_MIN);
 
     {
         //int* arr = NULL;
