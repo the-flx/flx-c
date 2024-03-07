@@ -384,7 +384,7 @@ static void find_best_match(flx_result* imatch, hm_int* str_info, int* heatmap, 
         }
         imatch = NULL;
 
-        for (int i = 0; i < hash_value; ++i) {
+        for (int i = 0; i < hmlen(hash_value); ++i) {
             flx_result val = hash_value[i];
             arrput(imatch, val);
         }
