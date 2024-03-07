@@ -20,16 +20,9 @@ typedef struct {
 
 /**
  * Return best score matching QUERY against STR.
- * @param *result Result pointer to store to.
  * @param *str String to test.
  * @param *query Query use to score.
  */
-void flx_score(flx_result* result, const char* str, const char* query);
-
-/**
- * Free result.
- * @param *result The score result to free.
- */
-void flx_free(flx_result* result);
+flx_result flx_score(const char* str, const char* query);
 
 #endif /* __FLX_H__ */

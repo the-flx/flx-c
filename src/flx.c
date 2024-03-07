@@ -131,17 +131,13 @@ static bool boundary(char last_ch, char ch) {
 /**
  * Increment each element in VEC between BEG and END by INC.
  */
-static void inc_vec(int* vec, int inc, int beg, int end) {
-    if (!vec) {
-        return;
-    }
-
+static void inc_vec(int** vec, int inc, int beg, int end) {
     inc = (inc) ? inc : 1;
     beg = (beg) ? beg : 0;
-    end = (end) ? end : arrlen(vec);
+    end = (end) ? end : arrlen(*vec);
 
     while (beg < end) {
-        vec[beg] = inc;
+        (*vec)[beg] += inc;
         ++beg;
     }
 }
@@ -184,10 +180,6 @@ static void get_hash_for_string(hm_int** result, const char* str) {
  * See documentation for logic.
  */
 static void get_heatmap_str(int** scores, const char* str, char group_separator) {
-    if (!*scores) {
-        return;
-    }
-
     const int str_len        = strlen(str);
     const int str_last_index = str_len - 1;
 
@@ -266,9 +258,9 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
         inc_vec(*scores, group_count * -2, 0, arrlen(*scores));
     }
 
-    int  index2           = separator_count;
+    int  index2 = separator_count;
     int  last_group_limit;
-    bool basepath_found   = false;
+    bool basepath_found = false;
 
     // score each group further
     for (int i = 0; i < arrlen(group_alist); ++i) {
@@ -299,10 +291,12 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
         }
         // ++++ non-basepath penalties
         else {
-            if (index2 == 0)
+            if (index2 == 0) {
                 num = -3;
-            else
+            }
+            else {
                 num = -5 + (index2 - 1);
+            }
         }
 
         inc_vec(*scores, num, group_start + 1, last_group_limit);
@@ -326,7 +320,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
 
             while (index3 < last_word) {
                 (*scores)[index3] += (-3 * word_index) - // ++++ word order penalty
-                                  charI;              // ++++ char order penalty
+                                     charI;              // ++++ char order penalty
                 ++charI;
 
                 ++index3;
@@ -433,16 +427,17 @@ static void find_best_match(flx_result* imatch, hm_int* str_info, int* heatmap, 
 
 /**
  * Return best score matching QUERY against STR.
- * @param *result Result pointer to store to.
  * @param *str String to test.
  * @param *query Query use to score.
  */
-void flx_score(flx_result* result, const char* str, const char* query) {
+flx_result flx_score(const char* str, const char* query) {
+    flx_result result;
+
     const int str_len   = strlen(str);
     const int query_len = strlen(query);
 
     if (str_len == 0 || query_len == 0) {
-        return;
+        return result;
     }
 
     hm_int* str_info = NULL;
@@ -451,26 +446,24 @@ void flx_score(flx_result* result, const char* str, const char* query) {
     int* heatmap = NULL;
     get_heatmap_str(&heatmap, str, '\0');
 
+    //printf("%d", *heatmap);
+
     bool        full_match_boost = (1 < query_len) && (query_len < 5);
     hm_score*   match_cache      = NULL;
     flx_result* optimal_match    = NULL;
     find_best_match(optimal_match, str_info, heatmap, 0, query, query_len, 0, match_cache);
 
     if (arrlen(optimal_match) == 0) {
-        return;
+        return result;
     }
 
-    flx_result result1 = optimal_match[0];
+    result = optimal_match[0];
 
-    int caar = arrlen(result1.indices);
+    int caar = arrlen(result.indices);
 
     if (full_match_boost && caar == str_len) {
-        result1.score += 10000;
+        result.score += 10000;
     }
-
-    result->indices = result1.indices;
-    result->score   = result1.score;
-    result->tail    = result1.tail;
 
     /* Free memories. */
     {
@@ -487,19 +480,6 @@ void flx_score(flx_result* result, const char* str, const char* query) {
         }
         hmfree(match_cache);
     }
-}
 
-/**
- * Free result.
- * @param *result The score result to free.
- */
-void flx_free(flx_result* result) {
-    if (!result) {
-        return;
-    }
-
-    if (!result->indices) {
-        return;
-    }
-    arrfree(result->indices);
+    return result;
 }
