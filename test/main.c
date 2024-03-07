@@ -45,14 +45,14 @@ void modify_arr(int** arr) {
     //printf("? %s\n", arrlen(*arr));
 }
 
-flx_result* get_result() {
-    flx_result result;
-    result.score   = 10;
-    result.indices = NULL;
-    arrput(result.indices, 10);
-    result.tail = 10;
-    return &result;
-}
+// flx_result* get_result() {
+//     flx_result result;
+//     result.score   = 10;
+//     result.indices = NULL;
+//     arrput(result.indices, 10);
+//     result.tail = 10;
+//     return &result;
+// }
 
 int main(int argc, char* argv[]) {
     flx_result* result = flx_score("buffer-file-name", "bfn");
