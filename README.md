@@ -25,7 +25,7 @@ flx_free(result);
 
 ## 🔍 See Also
 
-- [flx][] - Original algorithm
+- [flx][] - Original algorithm in Emacs Lisp
 - [flx-rs][] - Rewrite emacs-flx in Rust for dynamic modules
 - [FlxCs][] - Rewrite emacs-flx in C#
 - [flx-ts][] - Rewrite emacs-flx in TypeScript, with added support for JavaScript
