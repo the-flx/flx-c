@@ -263,7 +263,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
 
     // ++++ slash group-count penalty
     if (separator_count != 0) {
-        inc_vec(*scores, group_count * -2, NULL, NULL);
+        inc_vec(*scores, group_count * -2, 0, arrlen(*scores));
     }
 
     int  index2           = separator_count;
@@ -449,12 +449,12 @@ void flx_score(flx_result* result, const char* str, const char* query) {
     get_hash_for_string(&str_info, str);
 
     int* heatmap = NULL;
-    get_heatmap_str(&heatmap, str, NULL);
+    get_heatmap_str(&heatmap, str, '\0');
 
     bool        full_match_boost = (1 < query_len) && (query_len < 5);
     hm_score*   match_cache      = NULL;
     flx_result* optimal_match    = NULL;
-    find_best_match(optimal_match, str_info, heatmap, NULL, query, query_len, 0, match_cache);
+    find_best_match(optimal_match, str_info, heatmap, 0, query, query_len, 0, match_cache);
 
     if (arrlen(optimal_match) == 0) {
         return;
