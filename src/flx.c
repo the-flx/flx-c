@@ -17,7 +17,7 @@
 
 #include "../include/flx.h"
 
-#define min(X,Y) (((X) < (Y)) ? (X) : (Y))
+#define min(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 #define NIL (char)INT_MIN
 
@@ -83,7 +83,7 @@ static void clone_hm_int(const hm_int* src, hm_int** dest) {
     *dest = NULL;
 
     for (int i = 0; i < hmlen(src); ++i) {
-        int key = src[i].key;
+        int  key = src[i].key;
         int* val = src[i].value;
         hmput(*dest, key, val);
     }
@@ -119,6 +119,19 @@ static void clone_arr_result(const flx_result* src, flx_result** dest) {
     for (int i = 0; i < arrlen(src); ++i) {
         arrput(*dest, src[i]);
     }
+}
+
+/**
+ * Free up memory for flx_result* array.
+ */
+static void free_arr_result(flx_result** src) {
+    if (*src) {
+        for (int i = 0; i < arrlen(*src); ++i) {
+            arrfree((*src)[i].indices);
+        }
+        arrfree(*src);
+    }
+    *src = NULL;
 }
 
 /**
@@ -364,6 +377,11 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
 
         arrfree(cddr_group);
     }
+
+    for (int i = 0; i < arrlen(group_alist); ++i) {
+        arrfree(group_alist[i]);
+    }
+    arrfree(group_alist);
 }
 
 /**
@@ -392,7 +410,7 @@ static void bigger_sublist(int** result, int** sorted_list, int val) {
 }
 
 /**
- * Recursively compute the best match for a string, passed as STR-INFO and
+ * Recursively compute the best match for a string, passed as STR_INFO and
  * HEATMAP, according to QUERY.
  */
 static void find_best_match(flx_result** imatch, hm_int** str_info, int** heatmap, int greater_than,
@@ -403,10 +421,7 @@ static void find_best_match(flx_result** imatch, hm_int** str_info, int** heatma
 
     // Process matchCache here
     if (hash_value != NULL) {
-        if (*imatch) {
-            arrfree(*imatch);
-        }
-        *imatch = NULL;
+        free_arr_result(imatch);
 
         for (int i = 0; i < hmlen(hash_value); ++i) {
             flx_result val = hash_value[i];
@@ -427,13 +442,8 @@ static void find_best_match(flx_result** imatch, hm_int** str_info, int** heatma
                 int  index   = indexes[i];
                 int* indices = NULL;
                 arrput(indices, index);
-                {
-                    flx_result new_result;
-                    new_result.indices = indices;
-                    new_result.score   = (*heatmap)[index];
-                    new_result.tail    = 0;
-                    arrput(*imatch, new_result);
-                }
+                flx_result new_res = new_result(indices, (*heatmap)[index], 0);
+                arrput(*imatch, new_res);
             }
         } else {
             for (int i = 0; i < arrlen(indexes); ++i) {
@@ -441,7 +451,7 @@ static void find_best_match(flx_result** imatch, hm_int** str_info, int** heatma
 
                 flx_result* elem_group = NULL;
 
-                hm_int*     new_dic    = NULL;
+                hm_int* new_dic = NULL;
                 clone_hm_int(*str_info, &new_dic);
 
                 int* new_vec = NULL;
@@ -470,8 +480,7 @@ static void find_best_match(flx_result** imatch, hm_int** str_info, int** heatma
                     if (temp_score > best_score) {
                         best_score = temp_score;
 
-                        arrfree(*imatch);
-                        *imatch = NULL;
+                        free_arr_result(imatch);
 
                         int* indices = NULL;
                         clone_arr_int(elem.indices, &indices);
@@ -482,14 +491,18 @@ static void find_best_match(flx_result** imatch, hm_int** str_info, int** heatma
                             tail = cddr + 1;
                         }
 
-                        arrput(*imatch, new_result(indices, temp_score, tail));
+                        flx_result new_res = new_result(indices, temp_score, tail);
+                        arrput(*imatch, new_res);
                     }
                 }
 
+                free_arr_result(&elem_group);
                 hmfree(new_dic);
                 arrfree(new_vec);
             }
         }
+
+        arrfree(indexes);
 
         // Calls are cached to avoid exponential time complexity
         flx_result* new_res = NULL;
@@ -546,6 +559,11 @@ flx_result* flx_score(const char* str, const char* query) {
     /* Free memories. */
     {
         arrfree(heatmap);
+
+        // NOTE: The first one will be free in function `flx_free`.
+        for (int i = 1; i < arrlen(optimal_match); ++i) {
+            arrfree(optimal_match[i].indices);
+        }
         arrfree(optimal_match);
 
         for (int i = 0; i < hmlen(str_info); ++i) {
