@@ -23,6 +23,16 @@ for (int i = 0; i < arrlen(result->indices); ++i) {
 flx_free(result);
 ```
 
+## 🛠 Development
+
+How to detect memory leaks: (macOS only)
+
+```sh
+# leaks -atExit -- ./path/to/exe/test_flx
+```
+
+On Linux, you should use [Valgrind](https://valgrind.org/) instead!
+
 ## 🔍 See Also
 
 - [flx][] - Original algorithm in Emacs Lisp
