@@ -517,12 +517,14 @@ static void find_best_match(flx_result** imatch, hm_int** str_info, int** heatma
  * @param *query Query use to score.
  */
 flx_result* flx_score(const char* str, const char* query) {
-    flx_result* result = malloc(1 * sizeof(flx_result));
+    flx_result* result = malloc(1 * sizeof(*result));
+    result->indices    = NULL;
 
     const int str_len   = strlen(str);
     const int query_len = strlen(query);
 
     if (str_len == 0 || query_len == 0) {
+        flx_free(result);
         return NULL;
     }
 
@@ -538,6 +540,7 @@ flx_result* flx_score(const char* str, const char* query) {
     find_best_match(&optimal_match, &str_info, &heatmap, NIL, query, query_len, 0, &match_cache);
 
     if (arrlen(optimal_match) == 0) {
+        flx_free(result);
         return NULL;
     }
 
@@ -589,9 +592,9 @@ void flx_free(flx_result* result) {
         return;
     }
 
-    if (!result->indices) {
-        return;
+    if (result->indices != NULL) {
+        arrfree(result->indices);
     }
-    arrfree(result->indices);
+    
     free(result);
 }
