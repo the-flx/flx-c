@@ -40,6 +40,7 @@ On Linux, you should use [Valgrind](https://valgrind.org/) instead!
 - [flx-rs][] - Rewrite emacs-flx in Rust for dynamic modules
 - [FlxCs][] - Rewrite emacs-flx in C#
 - [flx-ts][] - Rewrite emacs-flx in TypeScript, with added support for JavaScript
+- [flx-zig][] - Rewrite emacs-flx in Zig
 
 ## ⚜️ License
 
@@ -55,3 +56,4 @@ See [LICENSE](./LICENSE) for details.
 [FlxCs]: https://github.com/jcs090218/FlxCs
 [flx-ts]: https://github.com/jcs090218/flx-ts
 [flx-c]: https://github.com/jcs090218/flx-c
+[flx-zig]: https://github.com/jcs090218/flx-zig
