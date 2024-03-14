@@ -529,7 +529,7 @@ static void free_internal(flx_result** optimal_match, hm_int** str_info, int** h
     }
     hmfree(*str_info);
 
-    for (int i = 0; i < hmlen(match_cache); ++i) {
+    for (int i = 0; i < hmlen(*match_cache); ++i) {
         arrfree((*match_cache)[i].value);
     }
     hmfree(*match_cache);
