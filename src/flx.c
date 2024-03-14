@@ -511,6 +511,46 @@ static void find_best_match(flx_result** imatch, hm_int** str_info, int** heatma
     }
 }
 
+/*
+ * Free internal memories.
+ */
+static void free_internal(flx_result** optimal_match, hm_int** str_info, int** heatmap,
+                          hm_score** match_cache) {
+    arrfree(*heatmap);
+
+    // NOTE: The first one will be free in function `flx_free`.
+    for (int i = 1; i < arrlen(*optimal_match); ++i) {
+        arrfree((*optimal_match)[i].indices);
+    }
+    arrfree(*optimal_match);
+
+    for (int i = 0; i < hmlen(*str_info); ++i) {
+        arrfree((*str_info)[i].value);
+    }
+    hmfree(*str_info);
+
+    for (int i = 0; i < hmlen(match_cache); ++i) {
+        arrfree((*match_cache)[i].value);
+    }
+    hmfree(*match_cache);
+}
+
+/**
+ * Free result.
+ * @param *result The score result to free.
+ */
+void flx_free(flx_result* result) {
+    if (!result) {
+        return;
+    }
+
+    if (result->indices != NULL) {
+        arrfree(result->indices);
+    }
+
+    free(result);
+}
+
 /**
  * Return best score matching QUERY against STR.
  * @param *str String to test.
@@ -540,6 +580,7 @@ flx_result* flx_score(const char* str, const char* query) {
     find_best_match(&optimal_match, &str_info, &heatmap, NIL, query, query_len, 0, &match_cache);
 
     if (arrlen(optimal_match) == 0) {
+        free_internal(&optimal_match, &str_info, &heatmap, &match_cache);
         flx_free(result);
         return NULL;
     }
@@ -560,41 +601,7 @@ flx_result* flx_score(const char* str, const char* query) {
     }
 
     /* Free memories. */
-    {
-        arrfree(heatmap);
-
-        // NOTE: The first one will be free in function `flx_free`.
-        for (int i = 1; i < arrlen(optimal_match); ++i) {
-            arrfree(optimal_match[i].indices);
-        }
-        arrfree(optimal_match);
-
-        for (int i = 0; i < hmlen(str_info); ++i) {
-            arrfree(str_info[i].value);
-        }
-        hmfree(str_info);
-
-        for (int i = 0; i < hmlen(match_cache); ++i) {
-            arrfree(match_cache[i].value);
-        }
-        hmfree(match_cache);
-    }
+    free_internal(&optimal_match, &str_info, &heatmap, &match_cache);
 
     return result;
-}
-
-/**
- * Free result.
- * @param *result The score result to free.
- */
-void flx_free(flx_result* result) {
-    if (!result) {
-        return;
-    }
-
-    if (result->indices != NULL) {
-        arrfree(result->indices);
-    }
-    
-    free(result);
 }
