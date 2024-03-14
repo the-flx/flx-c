@@ -8,7 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 0.1.1 (Unreleased)
 > Released N/A
 
-* N/A
+* fix: Make sure free internal memories (8e9d6c97d728525f4dd358b23b882a4e9b39b101)
 
 ## 0.1.0
 > Released Mar 7, 2024
