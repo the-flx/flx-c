@@ -4,7 +4,7 @@
 # flx-c
 > Rewrite emacs-flx in C
 
-[![CI](https://github.com/jcs090218/flx-c/actions/workflows/test.yml/badge.svg)](https://github.com/jcs090218/flx-c/actions/workflows/test.yml)
+[![CI](https://github.com/the-flx/flx-c/actions/workflows/test.yml/badge.svg)](https://github.com/the-flx/flx-c/actions/workflows/test.yml)
 
 ## 🔧 Usage
 
@@ -34,14 +34,6 @@ How to detect memory leaks: (macOS only)
 
 On Linux, you should use [Valgrind](https://valgrind.org/) instead!
 
-## 🔍 See Also
-
-- [flx][] - Original algorithm in Emacs Lisp
-- [flx-rs][] - Rewrite emacs-flx in Rust for dynamic modules
-- [FlxCs][] - Rewrite emacs-flx in C#
-- [flx-ts][] - Rewrite emacs-flx in TypeScript, with added support for JavaScript
-- [flx-zig][] - Rewrite emacs-flx in Zig
-
 ## ⚜️ License
 
 `flx-c` is distributed under the terms of the MIT license.
@@ -52,8 +44,3 @@ See [LICENSE](./LICENSE) for details.
 <!-- Links -->
 
 [flx]: https://github.com/lewang/flx
-[flx-rs]: https://github.com/jcs090218/flx-rs
-[FlxCs]: https://github.com/jcs090218/FlxCs
-[flx-ts]: https://github.com/jcs090218/flx-ts
-[flx-c]: https://github.com/jcs090218/flx-c
-[flx-zig]: https://github.com/jcs090218/flx-zig
