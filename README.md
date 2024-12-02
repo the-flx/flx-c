@@ -38,7 +38,7 @@ On Linux, you should use [Valgrind](https://valgrind.org/) instead!
 
 `flx-c` is distributed under the terms of the MIT license.
 
-See [LICENSE](./LICENSE) for details.
+See [`LICENSE`](./LICENSE) for details.
 
 
 <!-- Links -->
