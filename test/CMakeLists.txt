@@ -10,5 +10,5 @@ target_link_libraries(test_${PROJECT_NAME}
 
 set_target_properties(test_${PROJECT_NAME}
   PROPERTIES
-  C_STANDARD 17
+  CXX_STANDARD 17
 )
