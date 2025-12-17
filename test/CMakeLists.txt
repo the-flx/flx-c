@@ -1,13 +1,14 @@
-# 這些只是為了減少路徑長度... 嗎?
-include_directories("${CMAKE_SOURCE_DIR}/include/")  # alway include your own include path
-
 # 這些是一起編譯的檔案
-file(GLOB source_files CONFIGURE_DEPENDS
-  "${PROJECT_SOURCE_DIR}/include/*.h"
-  "${PROJECT_SOURCE_DIR}/src/*.c"
-  "${PROJECT_SOURCE_DIR}/test/*.c"
+
+add_executable(test_${PROJECT_NAME}
+  "${PROJECT_SOURCE_DIR}/test/main.c"
 )
 
-add_executable(test_${PROJECT_NAME} ${source_files})
+target_link_libraries(test_${PROJECT_NAME}
+  PRIVATE flx
+)
 
-set_property(TARGET test_${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set_target_properties(test_${PROJECT_NAME}
+  PROPERTIES
+  C_STANDARD 17
+)
