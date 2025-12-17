@@ -28,8 +28,8 @@ flx_free(result);
 
 How to detect memory leaks: (macOS only)
 
-```sh
-# leaks -atExit -- ./path/to/exe/test_flx
+```console
+leaks -atExit -- ./path/to/exe/test_flx
 ```
 
 On Linux, you should use [Valgrind](https://valgrind.org/) instead!
