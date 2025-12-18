@@ -305,7 +305,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
 
     int  index2           = separator_count;
     int  last_group_limit = NIL;
-    bool basepath_found   = false;
+    //bool basepath_found   = false;
 
     // score each group further
     for (int i = 0; i < arrlen(group_alist); ++i) {
@@ -318,7 +318,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
         bool basepath_p = false;
 
         if (words_len != 0 && !basepath_p) {
-            basepath_found = true;
+            //basepath_found = true;
             basepath_p     = true;
         }
 
@@ -343,7 +343,7 @@ static void get_heatmap_str(int** scores, const char* str, char group_separator)
             }
         }
 
-        int len = arrlen(*scores);
+        //int len = arrlen(*scores);
 
         inc_vec(scores, num, group_start + 1, last_group_limit);
 
