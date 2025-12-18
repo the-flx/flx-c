@@ -25,7 +25,7 @@
 #define NIL (char)INT_MIN
 
 static const char word_separators[] = {
-        ' ', '-', '_', ':', '.', '/', '\\',
+    ' ', '-', '_', ':', '.', '/', '\\', '\0',
 };
 
 static const int default_score = -35;
