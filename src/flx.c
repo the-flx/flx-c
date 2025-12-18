@@ -13,6 +13,9 @@
 #include <ctype.h>
 #include <limits.h>
 
+#ifndef STB_DS_IMPLEMENTATION
+#define STB_DS_IMPLEMENTATION
+#endif
 #include "../include/stb_ds.h"
 
 #include "../include/flx.h"

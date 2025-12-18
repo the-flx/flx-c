@@ -9,7 +9,6 @@
 
 #include <stdio.h>
 
-#define STB_DS_IMPLEMENTATION
 #include "../include/stb_ds.h"
 
 #include "../include/flx.h"
